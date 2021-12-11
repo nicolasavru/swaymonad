@@ -42,7 +42,7 @@ Inspired by Bruno Garcia's blog posts
 ## Usage
 Add something like the following to your sway config file:
 ```
-exec_always "pkill swaymonad.py; ~/.config/sway/swaymonad/swaymonad.py"
+exec_always "pkill -f 'python3? .+/swaymonad.py';  ~/.config/sway/swaymonad/swaymonad.py"
 
 bindsym $mod+Return nop promote_window
 
