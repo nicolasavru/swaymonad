@@ -64,6 +64,9 @@ class Layout(abc.ABC):
 
     return command
 
+  def refetch_container(self, i3: i3ipc.Connection) -> None:
+    self.old_workspace = common.refetch_container(i3, self.old_workspace)
+
 
 class LayoutConstructionProtocol(Protocol):
   def __call__(self,
@@ -234,3 +237,14 @@ def reflectx(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
 
 def reflecty(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
   transformations.reflect_container(i3, common.get_focused_workspace(i3), {"splitv"})
+
+def fullscreen_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
+  workspace = common.get_focused_workspace(i3)
+  if workspace is None:
+    logging.debug("Event had no associated workspace and there is no focused workpace. Returning.")
+    return
+
+  logging.debug(f"Applying to workspace {workspace.id}.")
+  i3.command("fullscreen")
+  layout = get_layout(workspace)
+  layout.refetch_container(i3)

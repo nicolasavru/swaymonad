@@ -61,6 +61,8 @@ bindsym $mod+x nop reflectx
 bindsym $mod+y nop reflecty
 bindsym $mod+t nop transpose
 
+bindsym $mod+f nop fullscreen
+
 bindsym $mod+Comma nop increment_masters
 bindsym $mod+Period nop decrement_masters
 

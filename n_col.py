@@ -3,7 +3,7 @@ import logging
 import sys
 import time
 import traceback
-from typing import Optional
+from typing import Callable, Optional
 
 import i3ipc
 
@@ -138,6 +138,8 @@ class NCol(layout.Layout):
       return
     logging.debug(f"Running layout for workspace {workspace.id}.")
 
+    post_hooks: list[Callable[[], None]] = []
+
     # Have new windows displace the current window instead of being opened below them.
     if event and event.change == "new":
       # Dialog windows are created as normal windows and then made to float
@@ -153,6 +155,12 @@ class NCol(layout.Layout):
       if old_leaf_ids != leaf_ids:
         cycle_windows.swap_with_prev_window(i3, event)
 
+      # Similarly, fullscreen windows are created as normal windows and them
+      # changed to be fullscreen.
+      if (con := workspace.find_by_id(event.container.id)) and con.fullscreen_mode == 1:
+        logging.debug(f"Container {con.id} was fullscreen. Setting to fullscreen again.")
+        post_hooks.append(lambda: con.command("fullscreen"))
+
     elif event and event.change == "close":
       # Focus the "next" window instead of the last-focused window in the other
       # column. Unless the window is floating, in which case let sway focus the
@@ -160,14 +168,17 @@ class NCol(layout.Layout):
       if (workspace.id == common.get_focused_workspace(i3).id and
           (focused := self.old_workspace.find_focused()) and
           not common.is_floating(focused)):
-        logging.debug(f"Looking at container {focused}: {focused.__dict__}")
+        logging.debug(f"Looking at container {focused.id}: {focused.__dict__}")
         old_leaf_ids = {leaf.id for leaf in self.old_workspace.leaves()}
         leaf_ids = {leaf.id for leaf in workspace.leaves()}
+        window_was_fullscreen = focused.fullscreen_mode == 1
         next_window = focused
         for _ in range(len(old_leaf_ids)):
           next_window = cycle_windows.find_next_window(next_window)
           if next_window.id in leaf_ids:
             next_window.command("focus")
+            if window_was_fullscreen:
+              next_window.command("fullscreen")
             break
 
     elif event and event.change == "move":
@@ -192,6 +203,9 @@ class NCol(layout.Layout):
     if workspace.id == common.get_focused_workspace(i3).id and (focused := workspace.find_focused()):
       logging.debug(f"Refocusing container {focused.id}.")
       cycle_windows.refocus_window(i3, focused)
+
+    for hook in post_hooks:
+      hook()
 
     self.old_workspace = workspace
     #logging.debug(f"Storing workspace:\n{common.tree_str(self.old_workspace)}")

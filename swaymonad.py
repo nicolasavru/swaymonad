@@ -53,6 +53,7 @@ COMMANDS: dict[str, Command] = {
   "increment_masters": layout.increment_masters_dispatcher,
   "decrement_masters": layout.decrement_masters_dispatcher,
   "move": layout.move_dispatcher,
+  "fullscreen": layout.fullscreen_dispatcher,
 }
 
 

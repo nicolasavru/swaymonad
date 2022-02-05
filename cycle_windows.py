@@ -39,6 +39,8 @@ def focus_window(i3: i3ipc.Connection,
 
   if new_window := find_offset_window(focused_window, offset):
     new_window.command("focus")
+    if focused_window.fullscreen_mode == 1:
+      new_window.command("fullscreen")
 
 
 def focus_next_window(i3: i3ipc.Connection,
@@ -60,20 +62,24 @@ def refocus_window(i3: i3ipc.Connection, window: i3ipc.Con) -> None:
   # while this will move the cursor to the center of the window.
   focus_next_window(i3, None, window)
   window.command("focus")
+  if window.fullscreen_mode == 1:
+    window.command("fullscreen")
 
 
 def swap_with_window(i3: i3ipc.Connection,
                      offset: int,
                      window: Optional[i3ipc.Con] = None,
                      focus_after_swap: bool = True) -> None:
-  window = window or common.get_focused_window(i3)
-  if not window:
+  focused_window = window or common.get_focused_window(i3)
+  if not focused_window:
     return
 
-  if new_window := find_offset_window(window, offset):
-    window.command(f"swap container with con_id {new_window.id}")
+  if new_window := find_offset_window(focused_window, offset):
+    focused_window.command(f"swap container with con_id {new_window.id}")
     if focus_after_swap:
-      window.command("focus")
+      focused_window.command("focus")
+      if focused_window.fullscreen_mode == 1:
+        new_window.command("fullscreen")
 
 
 def swap_with_next_window(i3: i3ipc.Connection,

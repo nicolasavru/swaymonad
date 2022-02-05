@@ -96,5 +96,8 @@ def is_floating(container: i3ipc.Con) -> bool:
 
 # https://docs.python.org/3/library/enum.html#using-automatic-values
 class AutoName(enum.Enum):
+  value: str
+  # https://github.com/python/mypy/issues/7591
+  @staticmethod
   def _generate_next_value_(name: str, start: int, count: int, last_values: list[str]) -> str:
     return name

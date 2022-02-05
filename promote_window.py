@@ -18,3 +18,5 @@ def promote_window(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
     return
   focused_window.command(f"swap container with con_id {master.id}")
   focused_window.command("focus")
+  if focused_window.fullscreen_mode == 1:
+    focused_window.command("fullscreen")
