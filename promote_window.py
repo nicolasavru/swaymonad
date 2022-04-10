@@ -1,10 +1,12 @@
+from typing import Optional
+
 import i3ipc
 
 import common
 
 
-def find_biggest_window(container: i3ipc.Con) -> i3ipc.Con:
-  return max(filter(lambda leaf: not leaf.focused, container.leaves()),
+def find_biggest_window(container: i3ipc.Con) -> Optional[i3ipc.Con]:
+  return max(container.leaves(),
              key=lambda leaf: leaf.rect.width * leaf.rect.height,
              default=None)
 

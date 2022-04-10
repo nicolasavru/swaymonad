@@ -5,7 +5,11 @@ import logging
 import sys
 import traceback
 import time
-from typing import Any, Protocol
+from typing import Callable
+try:
+  from typing import Concatenate, ParamSpec
+except ImportError:
+  from typing_extensions import Concatenate, ParamSpec
 
 import i3ipc
 
@@ -29,15 +33,8 @@ argparser.add_argument('--delay', default=0.0, type=float,
 args = argparser.parse_args()
 
 
-# TODO: this protocol isn't quite right, we want to express that these functions
-# MAY accept additional args and kwargs, not that they MUST. We should be able to fix this
-# with typing.ParamSpec in python 3.10.
-
-class Command(Protocol):
-  def __call__(self,
-               i3: i3ipc.Connection,
-               event: i3ipc.Event,
-               *args: str, **kwargs: Any) -> None: ...
+P = ParamSpec("P")
+Command = Callable[Concatenate[i3ipc.Connection, i3ipc.Event, P], None]
 
 
 COMMANDS: dict[str, Command] = {

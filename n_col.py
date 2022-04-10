@@ -66,9 +66,9 @@ class NCol(layout.Layout):
 
     nodes = workspace.nodes[
       ::(-1 if
-         ((transformations.Transformation.REFLECTX in self.transformations and
+         ((transformations.Transformation.REFLECTX in self.active_transformations and
            workspace.layout == "splith") or
-          (transformations.Transformation.REFLECTY in self.transformations and
+          (transformations.Transformation.REFLECTY in self.active_transformations and
            workspace.layout == "splitv"))
          else 1)
     ]
@@ -92,7 +92,8 @@ class NCol(layout.Layout):
             # we focued before the move.
             focused = workspace.find_focused()
             cur_col.nodes[-1].command(self.transform_command("move right"))
-            focused.command("focus")
+            if focused:
+              focused.command("focus")
             caused_mutation = True
             workspace = common.refetch_container(i3, workspace)
 
@@ -102,7 +103,8 @@ class NCol(layout.Layout):
             move_counter.increment()
             focused = workspace.find_focused()
             cur_col.nodes[0].command(self.transform_command("move left"))
-            focused.command("focus")
+            if focused:
+              focused.command("focus")
             caused_mutation = True
             workspace = common.refetch_container(i3, workspace)
 
@@ -114,7 +116,8 @@ class NCol(layout.Layout):
           move_counter.increment()
           focused = workspace.find_focused()
           cur_col.nodes[0].command(self.transform_command("move left"))
-          focused.command("focus")
+          if focused:
+            focused.command("focus")
           caused_mutation = True
           workspace = common.refetch_container(i3, workspace)
 
@@ -138,6 +141,7 @@ class NCol(layout.Layout):
       return
     logging.debug(f"Running layout for workspace {workspace.id}.")
 
+    should_reflow = event is None
     post_hooks: list[Callable[[], None]] = []
 
     # Have new windows displace the current window instead of being opened below them.
@@ -153,32 +157,40 @@ class NCol(layout.Layout):
       old_leaf_ids = {leaf.id for leaf in self.old_workspace.leaves()}
       leaf_ids = {leaf.id for leaf in workspace.leaves()}
       if old_leaf_ids != leaf_ids:
-        cycle_windows.swap_with_prev_window(i3, event)
+        cycle_windows.swap_with_prev_window(
+          i3, event, window=common.get_window_of_event(i3, event))
+        should_reflow = True
 
       # Similarly, fullscreen windows are created as normal windows and them
       # changed to be fullscreen.
       if (con := workspace.find_by_id(event.container.id)) and con.fullscreen_mode == 1:
-        logging.debug(f"Container {con.id} was fullscreen. Setting to fullscreen again.")
+        logging.debug(f"New container {con.id} was fullscreen. Setting to fullscreen again.")
         post_hooks.append(lambda: con.command("fullscreen"))
 
     elif event and event.change == "close":
       # Focus the "next" window instead of the last-focused window in the other
       # column. Unless the window is floating, in which case let sway focus the
       # last focused window in the workspace.
-      if (workspace.id == common.get_focused_workspace(i3).id and
+      old_leaf_ids = {leaf.id for leaf in self.old_workspace.leaves()}
+      leaf_ids = {leaf.id for leaf in workspace.leaves()}
+
+      if (old_leaf_ids != leaf_ids and
+          workspace.id == common.get_focused_workspace(i3).id and
           (focused := self.old_workspace.find_focused()) and
           not common.is_floating(focused)):
+        should_reflow = True
+
         logging.debug(f"Looking at container {focused.id}: {focused.__dict__}")
-        old_leaf_ids = {leaf.id for leaf in self.old_workspace.leaves()}
-        leaf_ids = {leaf.id for leaf in workspace.leaves()}
         window_was_fullscreen = focused.fullscreen_mode == 1
         next_window = focused
         for _ in range(len(old_leaf_ids)):
           next_window = cycle_windows.find_next_window(next_window)
-          if next_window.id in leaf_ids:
+          if next_window and next_window.id in leaf_ids:
             next_window.command("focus")
-            if window_was_fullscreen:
-              next_window.command("fullscreen")
+            if focused.fullscreen_mode == 1:
+              logging.debug(f"Closed container {focused.id} was fullscreen. "
+                            "Setting next container to fullscreen.")
+              post_hooks.append(lambda: next_window.command("fullscreen"))
             break
 
     elif event and event.change == "move":
@@ -187,20 +199,30 @@ class NCol(layout.Layout):
         move_counter.decrement()
         return
       else:
+        should_reflow = True
+
+        # split commands bring focus to the workspace of the window they are run
+        # on, and they may be run as part of the reflow layer, so refocus the
+        # current workspace at the end.
+        focused_workspace = common.get_focused_workspace(i3)
+        post_hooks.append(lambda: i3.command(f"workspace {focused_workspace.name}"))
+
         window_of_event = common.get_window_of_event(i3, event)
         workspace_of_event = common.get_workspace_of_window(window_of_event)
         cycle_windows.swap_with_prev_window(
           i3, event, window=window_of_event, focus_after_swap=False)
         layout.relayout_old_workspace(i3, workspace)
 
-    caused_mutation = True
-    while caused_mutation:
+    ever_reflowed = should_reflow
+    while should_reflow:
       workspace = common.refetch_container(i3, workspace)
-      caused_mutation = self.reflow(i3, workspace)
+      should_reflow = self.reflow(i3, workspace)
 
     # Move the mouse nicely to the middle of the focused window instead of it
     # continuing to sit in its old position or on a window boundary.
-    if workspace.id == common.get_focused_workspace(i3).id and (focused := workspace.find_focused()):
+    if (ever_reflowed and
+        workspace.id == common.get_focused_workspace(i3).id and
+        (focused := workspace.find_focused())):
       logging.debug(f"Refocusing container {focused.id}.")
       cycle_windows.refocus_window(i3, focused)
 

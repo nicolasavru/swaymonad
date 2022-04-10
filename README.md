@@ -13,6 +13,7 @@ Inspired by Bruno Garcia's blog posts
 ## Dependencies
 
 * Python >= 3.9
+* [typing_extensions](https://github.com/python/typing/tree/master/typing_extensions) if Python < 3.10
 * [i3ipc-python](https://github.com/altdesktop/i3ipc-python)
 
 

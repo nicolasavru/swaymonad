@@ -14,7 +14,7 @@ class Layout(abc.ABC):
   i3: i3ipc.Connection
   workspace_id: int
   n_masters: int
-  transformations: set[transformations.Transformation]
+  active_transformations: set[transformations.Transformation]
 
   @abc.abstractmethod
   def layout(self, i3: i3ipc.Connection, event: Optional[i3ipc.Event]) -> None:
@@ -26,7 +26,7 @@ class Layout(abc.ABC):
                transforms: collections.abc.Set[transformations.Transformation] = frozenset()):
     self.workspace_id = workspace_id
     self.n_masters = n_masters
-    self.transformations = set(transforms)
+    self.active_transformations = set(transforms)
     self.old_workspace: i3ipc.Con = None
 
   def __repr__(self) -> str:
@@ -53,13 +53,13 @@ class Layout(abc.ABC):
     return i3.get_tree().find_by_id(self.workspace_id)
 
   def transform_command(self, command: str) -> str:
-    if transformations.Transformation.TRANSPOSE in self.transformations:
+    if transformations.Transformation.TRANSPOSE in self.active_transformations:
       command = transformations.transpose_command_transformation(command)
 
-    if transformations.Transformation.REFLECTX in self.transformations:
+    if transformations.Transformation.REFLECTX in self.active_transformations:
       command = transformations.reflectx_command_transformation(command)
 
-    if transformations.Transformation.REFLECTY in self.transformations:
+    if transformations.Transformation.REFLECTY in self.active_transformations:
       command = transformations.reflecty_command_transformation(command)
 
     return command
@@ -100,7 +100,7 @@ def set_layout(i3: i3ipc.Connection,
   WORKSPACE_LAYOUTS[workspace.id] = LAYOUTS[layout](
     workspace_id=workspace.id,
     n_masters=current_layout.n_masters,
-    transforms=current_layout.transformations)
+    transforms=current_layout.active_transformations)
   logging.debug(f"Changing layout of workspace {workspace.id} from {current_layout} to {layout} .")
   i3.command("mode default")
 
@@ -110,7 +110,7 @@ def set_layout(i3: i3ipc.Connection,
 
 def layout_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
   try:
-    logging.debug(f"Receved layout event: {event.ipc_data}")
+    logging.debug(f"Received layout event: {event.ipc_data}")
     workspace = (common.get_workspace_of_event(i3, event) or
                  common.get_focused_workspace(i3))
     if workspace is None:
@@ -170,13 +170,13 @@ def transformation_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event,
 
   logging.debug(f"Applying to workspace {workspace.id}.")
   layout = get_layout(workspace)
-  if transformation in layout.transformations:
+  if transformation in layout.active_transformations:
     logging.debug(f"Removing transformation {transformation} from workspace {workspace.id}.")
-    layout.transformations.remove(transformation)
+    layout.active_transformations.remove(transformation)
   else:
     logging.debug(f"Adding transformation {transformation} to workspace {workspace.id}.")
-    layout.transformations.add(transformation)
-  logging.debug(f"Workspace {workspace.id} now has transformations {layout.transformations}.")
+    layout.active_transformations.add(transformation)
+  logging.debug(f"Workspace {workspace.id} now has transformations {layout.active_transformations}.")
   globals()[transformation.value.lower()](i3, event)
   layout.layout(i3, None)
 
@@ -217,7 +217,7 @@ def relayout_old_workspace(i3: i3ipc.Connection, new_workspace: i3ipc.Con) -> No
 def transpose(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
   workspace = common.get_focused_workspace(i3)
   layout = get_layout(workspace)
-  orig_transformations = layout.transformations
+  orig_transformations = layout.active_transformations
   if transformations.Transformation.REFLECTX in orig_transformations:
     reflectx(i3, event)
   if transformations.Transformation.REFLECTY in orig_transformations:
@@ -237,6 +237,7 @@ def reflectx(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
 
 def reflecty(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
   transformations.reflect_container(i3, common.get_focused_workspace(i3), {"splitv"})
+
 
 def fullscreen_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
   workspace = common.get_focused_workspace(i3)
