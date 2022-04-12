@@ -158,13 +158,14 @@ class NCol(layout.Layout):
       leaf_ids = {leaf.id for leaf in workspace.leaves()}
       if old_leaf_ids != leaf_ids:
         cycle_windows.swap_with_prev_window(
-          i3, event, window=common.get_window_of_event(i3, event))
+          i3, event, window=workspace.find_by_id(event.container.id))
         should_reflow = True
 
       # Similarly, fullscreen windows are created as normal windows and them
       # changed to be fullscreen.
       if (con := workspace.find_by_id(event.container.id)) and con.fullscreen_mode == 1:
         logging.debug(f"New container {con.id} was fullscreen. Setting to fullscreen again.")
+        post_hooks.append(lambda: con.command("focus"))
         post_hooks.append(lambda: con.command("fullscreen"))
 
     elif event and event.change == "close":
@@ -176,19 +177,19 @@ class NCol(layout.Layout):
 
       if (old_leaf_ids != leaf_ids and
           workspace.id == common.get_focused_workspace(i3).id and
-          (focused := self.old_workspace.find_focused()) and
-          not common.is_floating(focused)):
+          (closed_container := self.old_workspace.find_by_id(event.container.id)) and
+          not common.is_floating(closed_container)):
         should_reflow = True
 
-        logging.debug(f"Looking at container {focused.id}: {focused.__dict__}")
-        window_was_fullscreen = focused.fullscreen_mode == 1
-        next_window = focused
+        logging.debug(f"Looking at container {closed_container.id}: {closed_container.__dict__}")
+        window_was_fullscreen = closed_container.fullscreen_mode == 1
+        next_window = closed_container
         for _ in range(len(old_leaf_ids)):
           next_window = cycle_windows.find_next_window(next_window)
           if next_window and next_window.id in leaf_ids:
             next_window.command("focus")
-            if focused.fullscreen_mode == 1:
-              logging.debug(f"Closed container {focused.id} was fullscreen. "
+            if window_was_fullscreen:
+              logging.debug(f"Closed container {closed_container.id} was fullscreen. "
                             "Setting next container to fullscreen.")
               post_hooks.append(lambda: next_window.command("fullscreen"))
             break
@@ -207,8 +208,7 @@ class NCol(layout.Layout):
         focused_workspace = common.get_focused_workspace(i3)
         post_hooks.append(lambda: i3.command(f"workspace {focused_workspace.name}"))
 
-        window_of_event = common.get_window_of_event(i3, event)
-        workspace_of_event = common.get_workspace_of_window(window_of_event)
+        window_of_event = workspace(i3).find_by_id(event.container.id)
         cycle_windows.swap_with_prev_window(
           i3, event, window=window_of_event, focus_after_swap=False)
         layout.relayout_old_workspace(i3, workspace)
@@ -229,5 +229,5 @@ class NCol(layout.Layout):
     for hook in post_hooks:
       hook()
 
-    self.old_workspace = workspace
+    self.old_workspace = common.refetch_container(i3, workspace)
     #logging.debug(f"Storing workspace:\n{common.tree_str(self.old_workspace)}")
