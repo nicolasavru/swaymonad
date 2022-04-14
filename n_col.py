@@ -208,7 +208,7 @@ class NCol(layout.Layout):
         focused_workspace = common.get_focused_workspace(i3)
         post_hooks.append(lambda: i3.command(f"workspace {focused_workspace.name}"))
 
-        window_of_event = workspace(i3).find_by_id(event.container.id)
+        window_of_event = workspace.find_by_id(event.container.id)
         cycle_windows.swap_with_prev_window(
           i3, event, window=window_of_event, focus_after_swap=False)
         layout.relayout_old_workspace(i3, workspace)
