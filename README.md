@@ -12,13 +12,13 @@ Inspired by Bruno Garcia's blog posts
 
 ## Dependencies
 
-* Python >= 3.9
-* [typing_extensions](https://github.com/python/typing/tree/master/typing_extensions) if Python < 3.10
-* [i3ipc-python](https://github.com/altdesktop/i3ipc-python)
-
+- Python >= 3.9
+- [typing_extensions](https://github.com/python/typing/tree/master/typing_extensions) if Python < 3.10
+- [i3ipc-python](https://github.com/altdesktop/i3ipc-python)
 
 ## Layouts
-* NCol
+
+- NCol
 
   Maintains n columns, with one column being the master column. When n=2, this
   is equivalent to Xmonad's Tall layout. When n=3, this is equivalent to
@@ -27,21 +27,23 @@ Inspired by Bruno Garcia's blog posts
 
   Supports incrementing and decrementing the number of master windows.
 
-* Nop
+- Nop
 
   Disables auto-tiling for the workspace, allowing managing containers in normal
   Sway fashion.
 
-* Transformations
+- Transformations
 
   These transformations can be applied to layouts and can be combined:
-  * ReflectX - reflect the workspace horizontally.
-  * ReflectY - reflect the workspace vertically.
-  * Transpose - convert each column into a row. Equivalent to XMonad's Mirror.
 
+  - ReflectX - reflect the workspace horizontally.
+  - ReflectY - reflect the workspace vertically.
+  - Transpose - convert each column into a row. Equivalent to XMonad's Mirror.
 
 ## Usage
+
 Add something like the following to your sway config file:
+
 ```
 exec_always "pkill -f 'python3? .+/swaymonad.py';  ~/.config/sway/swaymonad/swaymonad.py"
 
@@ -80,4 +82,37 @@ bindsym $mod+l mode "layout"
 
 mouse_warping container
 focus_wrapping no
+```
+
+## Installation
+
+### NixOS
+
+#### NixOS installation with Flakes
+
+Just import flake and use defaultPackage. `swaymonad` binary will be available in PATH
+
+```nix
+{
+  # ........
+  inputs.swaymonad = {
+    url = "github:nicolasavru/swaymonad";
+    inputs.nixpkgs.follows = "nixpkgs"; # not mandatory but recommended
+  };
+  # ........
+
+  outputs = { self, nixpkgs, swaymonad }: {
+      # ........
+      modules = [
+        ({ self, ... }: {
+          environment.systemPackages = with pkgs; [
+            # ........
+            swaymonad.defaultPackage.xf86_64-linux
+            # ........
+          ];
+        })
+      ];
+    };
+  };
+}
 ```
