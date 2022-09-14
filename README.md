@@ -107,7 +107,7 @@ Just import flake and use defaultPackage. `swaymonad` binary will be available i
         ({ self, ... }: {
           environment.systemPackages = with pkgs; [
             # ........
-            swaymonad.defaultPackage.xf86_64-linux
+            swaymonad.defaultPackage.x86_64-linux
             # ........
           ];
         })
