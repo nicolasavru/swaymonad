@@ -69,12 +69,27 @@ bindsym $mod+f nop fullscreen
 bindsym $mod+Comma nop increment_masters
 bindsym $mod+Period nop decrement_masters
 
+mode "resize" {
+  bindsym Left resize shrink width 10px
+  bindsym Down resize grow height 10px
+  bindsym Up resize shrink height 10px
+  bindsym Right resize grow width 10px
+
+  # bindsym n resize set width (n-1/n)
+  bindsym 2 resize set width 50ppt  # 1/2, 1/2
+  bindsym 3 resize set width 66ppt  # 2/3, 1/3
+  bindsym 4 resize set width 75ppt  # 3/4, 1/4
+
+  bindsym Return mode "default"
+  bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+
 mode "layout" {
   bindsym t nop set_layout tall
   bindsym 3 nop set_layout 3_col
   bindsym n nop set_layout nop
 
-  # Return to default mode
   bindsym Return mode "default"
   bindsym Escape mode "default"
 }
