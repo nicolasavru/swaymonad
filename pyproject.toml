@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swaymonad"
+version = "1.0" # Change this as necessary.
+description = "An auto-tiler for sway that implements Xmonad-like layouts."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+  "Programming Language :: Python :: 3"
+]
+license = {text = "MIT"}
+dependencies = [
+  "i3ipc"
+]
+
+[project.urls]
+"Source" = "https://github.com/nicolasavru/swaymonad"
