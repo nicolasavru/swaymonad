@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 import i3ipc
 
-import common
+import swaymonad.common as common
 
 
 def find_offset_window(current_container: i3ipc.Con,

@@ -5,7 +5,7 @@ from typing import Optional
 
 import i3ipc
 
-import move_counter
+import swaymonad.move_counter as move_counter
 
 
 def get_workspaces(i3: i3ipc.Connection) -> list[i3ipc.Con]:

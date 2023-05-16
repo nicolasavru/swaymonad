@@ -101,6 +101,14 @@ focus_wrapping no
 
 ## Installation
 
+### From source
+
+Run `pip install "git+https://github.com/nicolasavru/swaymonad"`
+
+### Arch Linux
+
+Swaymonad is available at the Arch Linux User Repository under the package name `swaymonad-git`
+
 ### NixOS
 
 #### NixOS installation with Flakes

@@ -2,7 +2,7 @@ from typing import Optional
 
 import i3ipc
 
-import common
+import swaymonad.common as common
 
 
 def find_biggest_window(container: i3ipc.Con) -> Optional[i3ipc.Con]:

@@ -2,7 +2,7 @@ from typing import Optional
 
 import i3ipc
 
-import layout
+import swaymonad.layout as layout
 
 
 class Nop(layout.Layout):
