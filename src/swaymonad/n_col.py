@@ -7,11 +7,11 @@ from typing import Callable, Optional
 
 import i3ipc
 
-import common
-import cycle_windows
-import layout
-import move_counter
-import transformations
+import swaymonad.common as common
+import swaymonad.cycle_windows as cycle_windows
+import swaymonad.layout as layout
+import swaymonad.move_counter as move_counter
+import swaymonad.transformations as transformations
 
 
 def balance_cols(i3: i3ipc.Connection,

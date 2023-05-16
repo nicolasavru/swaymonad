@@ -13,13 +13,13 @@ except ImportError:
 
 import i3ipc
 
-import common
-import cycle_windows
-import layout
-import n_col
-import nop_layout
-import promote_window
-import transformations
+import swaymonad.common as common
+import swaymonad.cycle_windows as cycle_windows
+import swaymonad.layout as layout
+import swaymonad.n_col as n_col
+import swaymonad.nop_layout as nop_layout
+import swaymonad.promote_window as promote_window
+import swaymonad.transformations as transformations
 
 argparser = argparse.ArgumentParser(description='An xmonad-like auto-tiler for sway.')
 argparser.add_argument('--default-layout', default="tall",
@@ -129,8 +129,7 @@ class Connection(i3ipc.Connection):
     self.enable_command_buffering()
     return workspaces
 
-
-if __name__ == "__main__":
+def main():
   logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING,
                       filename=args.log_file,
                       format='%(asctime)s, %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -147,3 +146,5 @@ if __name__ == "__main__":
 
   i3.main()
 
+if __name__ == "__main__":
+  main()

@@ -20,4 +20,4 @@ dependencies = [
 "Source" = "https://github.com/nicolasavru/swaymonad"
 
 [project.scripts]
-swaymonad = "swaymonad.swaymonad:main_cli"
+swaymonad = "swaymonad.swaymonad:main"

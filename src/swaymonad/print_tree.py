@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import i3ipc
 
-import common
+import swaymonad.common as common
 
 
 i3 = i3ipc.Connection()

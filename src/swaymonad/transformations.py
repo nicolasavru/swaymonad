@@ -3,7 +3,7 @@ import enum
 
 import i3ipc
 
-import common
+import swaymonad.common as common
 
 
 class Transformation(common.AutoName):

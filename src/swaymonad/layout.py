@@ -6,8 +6,8 @@ from typing import Optional, Protocol
 
 import i3ipc
 
-import common
-import transformations
+import swaymonad.common as common
+import swaymonad.transformations as transformations
 
 
 class Layout(abc.ABC):
