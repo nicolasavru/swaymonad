@@ -18,7 +18,7 @@ import cycle_windows
 import layout
 import n_col
 import nop_layout
-import promote_window
+import master_operations
 import transformations
 
 argparser = argparse.ArgumentParser(description='An xmonad-like auto-tiler for sway.')
@@ -38,7 +38,9 @@ Command = Callable[Concatenate[i3ipc.Connection, i3ipc.Event, P], None]
 
 
 COMMANDS: dict[str, Command] = {
-  "promote_window": promote_window.promote_window,
+  "promote_window": master_operations.promote_window,
+  "focus_master": master_operations.focus_master,
+  "resize_master": master_operations.resize_master,
   "reflectx": layout.reflectx_dispatcher,
   "reflecty": layout.reflecty_dispatcher,
   "transpose": layout.transpose_dispatcher,

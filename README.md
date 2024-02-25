@@ -75,10 +75,19 @@ mode "resize" {
   bindsym Up resize shrink height 10px
   bindsym Right resize grow width 10px
 
+  bindsym Shift+Left nop resize_master shrink width 10px
+  bindsym Shift+Down nop resize_master grow height 10px
+  bindsym Shift+Up nop resize_master shrink height 10px
+  bindsym Shift+Right nop resize_master grow width 10px
+
   # bindsym n resize set width (n-1/n)
   bindsym 2 resize set width 50ppt  # 1/2, 1/2
   bindsym 3 resize set width 66ppt  # 2/3, 1/3
   bindsym 4 resize set width 75ppt  # 3/4, 1/4
+
+  bindsym Shift+2 nop resize_master set width 50ppt
+  bindsym Shift+3 nop resize_master set width 66ppt
+  bindsym Shift+4 nop resize_master set width 75ppt
 
   bindsym Return mode "default"
   bindsym Escape mode "default"
