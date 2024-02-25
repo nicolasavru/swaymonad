@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+from collections.abc import Callable, Iterator
 import functools
+import itertools
 import logging
+import shlex
 import sys
 import traceback
 import time
-from typing import Callable
 try:
   from typing import Concatenate, ParamSpec
 except ImportError:
@@ -16,9 +18,9 @@ import i3ipc
 import common
 import cycle_windows
 import layout
+import master_operations
 import n_col
 import nop_layout
-import master_operations
 import transformations
 
 argparser = argparse.ArgumentParser(description='An xmonad-like auto-tiler for sway.')
@@ -56,25 +58,28 @@ COMMANDS: dict[str, Command] = {
 }
 
 
-def parse_command(event: i3ipc.Event) -> list[str]:
+def parse_binding(event: i3ipc.Event) -> Iterator[list[str]]:
   logging.debug(f"Parsing command: {event.binding.command}")
-  split_command = event.binding.command.split()
-  return ([]
-          if not split_command or split_command[0] != 'nop'
-          else split_command[1:])
+  split_commands = shlex.split(event.binding.command)
+  delims = ';,'
+  for _, group in itertools.groupby(split_commands, key=lambda s: s in delims):
+    group = list(group)
+    if group[0] == 'nop':
+      yield group[1:]
 
 
 def command_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event):
   logging.debug(f"Receved command event: {event.ipc_data}")
 
-  command = parse_command(event)
-  logging.debug(f"Parsed command: {command}")
-  if not command:
+  commands = list(parse_binding(event))
+  logging.debug(f"Parsed commands: {commands}")
+  if not commands:
     return
 
   try:
     i3.enable_command_buffering()
-    COMMANDS.get(command[0], lambda i3, event, *args: None)(i3, event, *command[1:])
+    for command in commands:
+      COMMANDS.get(command[0], lambda i3, event, *args: None)(i3, event, *command[1:])
     i3.disable_command_buffering()
   except Exception as ex:
     traceback.print_exc()
