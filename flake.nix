@@ -12,7 +12,7 @@
           pname = "swaymonad";
           version = "0.0.1";
           buildInputs = [
-            (pkgs.python310.withPackages
+            (pkgs.python3.withPackages
               (pythonPackages: with pythonPackages; [ i3ipc ]))
           ];
           unpackPhase = "true";
