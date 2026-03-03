@@ -132,10 +132,13 @@ def increment_masters_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event) -> No
     logging.debug("Event had no associated workspace and there is no focused workpace. Returning.")
     return
 
+  focused = common.get_focused_window(i3)
   logging.debug(f"Applying to workspace {workspace.id}.")
   layout = get_layout(workspace)
   layout.increment_masters()
   layout.layout(i3, None)
+  if focused:
+    focused.command("focus")
 
 
 def decrement_masters_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event) -> None:
@@ -144,10 +147,13 @@ def decrement_masters_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event) -> No
     logging.debug("Event had no associated workspace and there is no focused workpace. Returning.")
     return
 
+  focused = common.get_focused_window(i3)
   logging.debug(f"Applying to workspace {workspace.id}.")
   layout = get_layout(workspace)
   layout.decrement_masters()
   layout.layout(i3, None)
+  if focused:
+    focused.command("focus")
 
 
 def move_dispatcher(i3: i3ipc.Connection, event: i3ipc.Event, direction: str) -> None:
